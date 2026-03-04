@@ -17,3 +17,9 @@ El acceso se puede realizar desde Postman o el navegador
 1. Book
 2. BookRepository
 3. BookController
+   1. Buscar todos los libros
+   2. Buscar un libro por ID
+   3. Crear un libro a la db
+   4. Actualizar un libro a la db
+   5. Borrar un libro de la db
+   6. Borrar todos los libros de la db
