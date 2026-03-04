@@ -30,7 +30,7 @@ public class DemoApplication {
 
 		System.out.println("Cantidad de libros en la db: " + repository.findAll().size());
 
-		repository.deleteById(1L);
-		System.out.println("Cantidad de libros en la db: " + repository.findAll().size());
+		// repository.deleteById(1L);
+		// System.out.println("Cantidad de libros en la db: " + repository.findAll().size());
 	}
 }
