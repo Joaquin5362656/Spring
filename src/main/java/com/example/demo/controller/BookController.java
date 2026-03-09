@@ -1,8 +1,12 @@
 package com.example.demo.controller;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
 import com.example.demo.entities.Book;
 import com.example.demo.repository.BookRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@Tag(name = "Books", description = "REST API for managing books in the library")
 public class BookController {
 
     private final Logger log = LoggerFactory.getLogger(BookController.class);
@@ -39,6 +44,7 @@ public class BookController {
     *   @return
     */
     @GetMapping("/api/books")
+    @Operation(summary = "List all books", description = "Return a complete list of books stored in the database")
     public List<Book> findAll(){
         return bookRepository.findAll();
     }
@@ -52,7 +58,13 @@ public class BookController {
 
     // Buscar un solo libro en la db por ID
     @GetMapping("/api/books/{id}")
-    public ResponseEntity<Book> findById(@PathVariable Long id){
+    @Operation(summary = "search book by ID", description = "Search for a specific book using its ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Book found successfully"),
+            @ApiResponse(responseCode = "404", description = "The book does not exist in the database")
+    })
+    public ResponseEntity<Book> findById(@Parameter(description = "book id", example = "1")
+                                             @PathVariable Long id){
         Optional<Book> bookOptional = bookRepository.findById(id);
 
         // opcion 1:
@@ -72,10 +84,14 @@ public class BookController {
      * */
     // Crear un libro a la db
     @PostMapping("/api/books")
-    public ResponseEntity<Book> created(@RequestBody Book book){
+    @Operation(summary = "Create a new book", description = "Store a new book. Do not include an ID in the request body.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Book created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request (for example, trying to send an ID)")
+    })
+    public ResponseEntity<Book> create(@RequestBody Book book){
         if (book.getId() != null){ // existe el Id, por lo que no es una creacion
-            log.warn("trying to create a book with Id");
-            System.out.println("trying to create a book with Id");
+            log.warn("Trying to create a book with an existing ID");
             return ResponseEntity.badRequest().build();
         }
 
@@ -86,15 +102,11 @@ public class BookController {
 
     // Actualizar un libro de la db
     @PutMapping("/api/books")
+    @Operation(summary = "Update a book", description = "Modify an existing book. The ID is required in the request body.")
     public ResponseEntity<Book> update(@RequestBody Book book){
 
-        if (book.getId() == null){ // si no existe el Id, es una creacion
-            log.warn("Trying to update a non existent book");
-            return ResponseEntity.badRequest().build();
-        }
-
-        if (!bookRepository.existsById(book.getId())){
-            log.warn("Trying to update a non existent book");
+        if (book.getId() == null || !bookRepository.existsById(book.getId()))  { // si no existe el Id, es una creacion
+            log.warn("Trying to update a non existent book or one without an ID");
             return ResponseEntity.badRequest().build();
         }
 
@@ -106,6 +118,7 @@ public class BookController {
 
     // Borrar un libro de la db
     @DeleteMapping("api/books/{id}")
+    @Operation(summary = "Delete a book", description = "Delete a book from the database permanently by its ID")
     public ResponseEntity<Book> delete(@PathVariable Long id){
 
         if (!bookRepository.existsById(id)){
@@ -118,8 +131,9 @@ public class BookController {
     }
 
 
-    // Borrar un libro de la db
+    // Borrar todos los libro de la db
     @DeleteMapping("api/books")
+    @Operation(summary = "Delete all books", description = "Delete all books from the database permanently")
     public ResponseEntity<Book> deleteAll(){
         log.info("REST request for delete all books");
         bookRepository.deleteAll();

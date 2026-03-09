@@ -1,24 +1,38 @@
 package com.example.demo.entities;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
 
-
 @Entity
 @Table(name = "books")
+@Schema(description = "Entity that represents a book in the system")
 public class Book {
 
     // atributes
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Auto-incrementing ID (Dont send on creation)", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
+
+    @Schema(description = "Full title of the book", example = "White nights", requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
+
+    @Schema(description = "Author's name", example = "Joaquin Osorio")
     private String author;
+
+    @Schema(description = "Total number of pages", example = "324")
     private Integer pages;
+
+    @Schema(description = "Selling price in local currency", example = "6.75")
     private Double price;
+
+    @Schema(description = "Original publication date", example = "2002-01-29")
     private LocalDate releaseDate;
+
+    @Schema(description = "Indicate if the book is available in digital format", example = "true")
     private Boolean onLine;
 
     // constructors
