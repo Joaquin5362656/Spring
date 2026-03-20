@@ -63,7 +63,7 @@ The application is configured to run with **PostgreSQL**.
 - **Driver**: `org.postgresql.Driver`
 - **Default port**: `5432`
 - **Time zone**: forced to `UTC` using VM Options and environment variables in Docker, to maintain consistency between Windows (local) and Linux (Docker/Cloud).
-## 🧪 Testing
+##  Testing
 
 The project includes:
 
