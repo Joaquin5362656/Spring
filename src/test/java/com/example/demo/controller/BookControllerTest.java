@@ -10,6 +10,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +24,7 @@ class BookControllerTest {
 
     @Autowired
     private RestTemplateBuilder restTemplateBuilder;
+
     @Autowired
     private BookRepository bookRepository;
 
@@ -31,6 +33,7 @@ class BookControllerTest {
 
     @BeforeEach
     void setUp() {
+        // Limpiamos la base de datos antes de cada test para asegurar independencia
         bookRepository.deleteAll();
         restTemplateBuilder = restTemplateBuilder.rootUri("http://localhost:" + port);
         testRestTemplate = new TestRestTemplate(restTemplateBuilder);
@@ -38,18 +41,20 @@ class BookControllerTest {
 
     @Test
     void findAll() {
-        ResponseEntity<Book[]> response = testRestTemplate.getForEntity("/api/books", Book[].class);
+        // Insertamos uno manual para asegurar que la lista no venga vacía si queremos probar tamaño
+        bookRepository.save(new Book(null, "Test Book", "Author", 100, 10.0, null, true));
 
+        ResponseEntity<Book[]> response = testRestTemplate.getForEntity("/api/books", Book[].class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
         List<Book> books = Arrays.asList(response.getBody());
-        System.out.println(books.size());
+        assertTrue(books.size() >= 1);
     }
 
     @Test
     void findById() {
-        ResponseEntity<Book> response = testRestTemplate.getForEntity("/api/books/1", Book.class);
-
+        // Buscamos un ID que sabemos que no existe porque acabamos de hacer deleteAll()
+        ResponseEntity<Book> response = testRestTemplate.getForEntity("/api/books/999", Book.class);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
@@ -71,12 +76,12 @@ class BookControllerTest {
                 """;
 
         HttpEntity<String> request = new HttpEntity<>(json, headers);
-
         ResponseEntity<Book> response = testRestTemplate.exchange("/api/books", HttpMethod.POST, request, Book.class);
 
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         Book result = response.getBody();
-
-        assertNotNull(result.getId()); // Valida que se genero un ID
-        assertTrue(result.getId() > 0); // O que es mayor a cero
+        assertNotNull(result);
+        assertNotNull(result.getId());
+        assertEquals("Berner", result.getAuthor());
     }
 }
