@@ -1,15 +1,20 @@
-# Usamos una imagen de Java liviana (Eclipse Temurin es excelente)
-FROM eclipse-temurin:23-jre-alpine
-
-# Definimos el directorio de trabajo dentro del contenedor
+# ETAPA 1: Compilacion (Build)
+FROM maven:3-eclipse-temurin-23-alpine AS build
 WORKDIR /app
 
-# Copiamos el archivo .jar que generamos en el Paso 1 al contenedor
-COPY target/demo-0.0.1-SNAPSHOT.jar app.jar
+# Copiamos el pom.xml y el código fuente
+COPY pom.xml .
+COPY src ./src
 
-# Exponemos el puerto 8080 que es donde corre Spring Boot
+# Ejecutamos el empaquetado (esto genera el .jar dentro de Render)
+RUN mvn clean package -DskipTests
+
+# ETAPA 2: Ejecucion (Run)
+FROM eclipse-temurin:23-jre-alpine
+WORKDIR /app
+
+# Copiamos el .jar desde la etapa de "build" a esta imagen final
+COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar app.jar
+
 EXPOSE 8080
-
-# Comando para ejecutar la aplicación
-# Pasamos el parámetro de TimeZone por las dudas para evitar el error anterior
 ENTRYPOINT ["java", "-Duser.timezone=UTC", "-jar", "app.jar"]
